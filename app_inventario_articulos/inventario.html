@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario</title>
+    <style>
+        /* BODY Y FUENTES */
+        body {
+            font-family: "Fira Sans", Arial, sans-serif;
+            margin: 20px;
+            background-color: #000000;
+            /* Negro Puro (Tema Oscuro por defecto) */
+            color: #ffffff;
+            /* Texto blanco */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* LOGO y TÍTULO */
+        #logo {
+            text-align: left;
+            margin: 10px 0 20px 10px;
+        }
+
+        #logo img {
+            max-width: 150px;
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+            /* Blanco suave */
+            margin-top: 0;
+            transition: color 0.3s;
+        }
+
+        /* FORMULARIO Y BUSCADOR */
+        #formulario,
+        #buscador {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #controles-globales {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #formulario input,
+        #buscador input,
+        .accion-input {
+            /* Estilo unificado para inputs, incluido el nuevo de acción */
+            padding: 6px 12px;
+            margin: 0 5px 10px 0;
+            border-radius: 4px;
+            border: 1px solid #333333;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            outline: none;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        /* TABLA */
+        table {
+            width: 90%;
+            margin: auto;
+            border-collapse: collapse;
+            background: #111111;
+            /* Negro muy oscuro para la tabla */
+            color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: center;
+            border-bottom: 1px solid #333333;
+            /* Separador gris oscuro */
+            transition: border-color 0.3s;
+        }
+
+        th {
+            cursor: pointer;
+            background: #222222;
+            /* Fondo de cabecera gris oscuro */
+            user-select: none;
+            transition: background 0.3s;
+        }
+
+        th:hover {
+            background: #333333;
+            /* Hover gris más claro */
+        }
+
+        /* BOTONES */
+        button {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: black;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin: 2px;
+        }
+
+        button.sumar {
+            background: #cccccc;
+            /* Gris claro (Positivo) */
+        }
+
+        button.restar {
+            background: #888888;
+            /* Gris medio (Negativo) */
+        }
+
+        button.eliminar {
+            background: #b58900;
+            /* Amarillo dorado para alerta de eliminar */
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        /* INPUT DE BUSCADOR */
+        #inputBuscar {
+            width: 300px;
+        }
+
+        /* --- REGLAS PARA TEMA CLARO --- */
+        .tema-claro {
+            background-color: #f0f0f0;
+            /* Fondo blanco suave */
+            color: #000000;
+            /* Texto negro */
+        }
+
+        .tema-claro h1 {
+            color: #333333;
+            /* Título gris oscuro */
+        }
+
+        .tema-claro #formulario input,
+        .tema-claro #buscador input,
+        .tema-claro .accion-input {
+            border: 1px solid #cccccc;
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .tema-claro table {
+            background: #ffffff;
+            color: #333333;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tema-claro th,
+        .tema-claro td {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .tema-claro th {
+            background: #eeeeee;
+        }
+
+        .tema-claro th:hover {
+            background: #dddddd;
+        }
+
+        .tema-claro button {
+            /* Ajuste para que los botones de acción se vean bien en fondo claro */
+            color: #000000;
+        }
+
+        .tema-claro button.eliminar {
+            background: #ffcc00;
+            /* Amarillo más suave en modo claro */
+            color: black;
+        }
+
+        /* Ajuste específico para el botón de tema con emojis para que el emoji se vea bien */
+        #toggleTema {
+            font-size: 18px;
+            /* Hace el emoji más grande */
+            padding: 5px 12px;
+            /* Ajusta el padding para el emoji */
+        }
+
+        /* --- FIN REGLAS TEMA CLARO --- */
+    </style>
+</head>
+
+<body>
+    <div id="logo">
+        <img src="logo.png" alt="Logo">
+    </div>
+
+    <h1>INVENTARIO</h1>
+
+    <div id="buscador">
+        <input type="text" id="inputBuscar" placeholder="Buscar artículo o tipo" onkeyup="filtrarTabla()">
+    </div>
+
+    <div id="formulario">
+        <input type="text" id="nuevoArticulo" placeholder="Artículo">
+        <input type="text" id="nuevoTipo" placeholder="Tipo">
+        <input type="number" id="nuevaCantidad" placeholder="Cantidad" min="0" step="0.01">
+        <button onclick="agregarArticulo()">Añadir</button>
+    </div>
+
+    <div id="controles-globales">
+        <button class="eliminar" onclick="reiniciarInventario()">Poner todo el Inventario a 0</button>
+        <button onclick="cambiarTema()" style="background: #333333; color: white; margin-left: 10px;" id="toggleTema">
+        </button>
+    </div>
+    <table id="tabla">
+        <tr>
+            <th onclick="ordenarTabla(0)">Artículo ▲▼</th>
+            <th onclick="ordenarTabla(1)">Tipo ▲▼</th>
+            <th onclick="ordenarTabla(2, true)">Cantidad ▲▼</th>
+            <th>Acciones</th>
+        </tr>
+    </table>
+
+    <script>
+        let ordenAsc = true;
+
+        // **Poner la cantidad a cero**
+        function ponerCero(id) {
+            let celda = document.getElementById(id);
+            if (celda) {
+                celda.textContent = "0";
+                guardarLocalStorage();
+            }
+        }
+
+        // **SUMAR una cantidad específica al stock actual**
+        function sumarCantidad(id) {
+            let inputId = "inputSet" + id;
+            let input = document.getElementById(inputId);
+            let cantidadASumar = parseFloat(input.value.replace(',', '.'));
+
+            if (isNaN(cantidadASumar) || cantidadASumar <= 0) {
+                alert("Introduce una cantidad positiva para añadir.");
+                return;
+            }
+
+            let celda = document.getElementById(id);
+            if (celda) {
+                let valorActual = parseFloat(celda.textContent.replace(',', '.')) || 0;
+                let nuevoValor = valorActual + cantidadASumar;
+
+                nuevoValor = Math.round((nuevoValor + Number.EPSILON) * 100) / 100;
+                celda.textContent = nuevoValor.toString().replace('.', ',');
+                input.value = "";
+                guardarLocalStorage();
+            }
+        }
+
+        // **RESTAR una cantidad específica al stock actual**
+        function restarCantidad(id) {
+            let inputId = "inputSet" + id;
+            let input = document.getElementById(inputId);
+            let cantidadARestar = parseFloat(input.value.replace(',', '.'));
+
+            if (isNaN(cantidadARestar) || cantidadARestar <= 0) {
+                alert("Introduce una cantidad positiva para restar.");
+                return;
+            }
+
+            let celda = document.getElementById(id);
+            if (celda) {
+                let valorActual = parseFloat(celda.textContent.replace(',', '.')) || 0;
+                let nuevoValor = valorActual - cantidadARestar;
+
+                if (nuevoValor < 0) nuevoValor = 0; // Prevenir valores negativos
+
+                nuevoValor = Math.round((nuevoValor + Number.EPSILON) * 100) / 100;
+                celda.textContent = nuevoValor.toString().replace('.', ',');
+                input.value = "";
+                guardarLocalStorage();
+            }
+        }
+
+        // **IMPORTANTE: Ajustar por delta (Función obsoleta pero se mantiene por si se reutiliza)**
+        function ajustar(id, delta) {
+            let celda = document.getElementById(id);
+            if (!celda) return;
+
+            let valor = parseFloat(celda.textContent.replace(',', '.')) || 0;
+            valor += delta;
+            if (valor < 0) valor = 0;
+            valor = Math.round((valor + Number.EPSILON) * 100) / 100; // 2 decimales
+            celda.textContent = valor.toString().replace('.', ',');
+            guardarLocalStorage();
+        }
+
+        // **Eliminar Fila (CORREGIDA)**
+        function eliminarFila(boton) {
+            // Sube 3 niveles: <button> -> <div> -> <td> -> <tr>
+            let fila = boton.parentNode.parentNode.parentNode;
+
+            fila.parentNode.removeChild(fila);
+            guardarLocalStorage();
+        }
+
+        // **REINICIAR TODO EL INVENTARIO A CERO**
+        function reiniciarInventario() {
+            if (!confirm("⚠️ ADVERTENCIA: ¿Estás seguro de que quieres poner la cantidad de TODOS los artículos a CERO? Esta acción NO se puede deshacer.")) {
+                return; // Detener si el usuario cancela
+            }
+
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+
+            filas.forEach(fila => {
+                // La cantidad está en la tercera celda (índice 2)
+                let celdaCantidad = fila.cells[2];
+                celdaCantidad.textContent = "0";
+            });
+
+            guardarLocalStorage();
+            alert("✅ ¡Inventario reiniciado! Todas las cantidades están ahora a cero.");
+        }
+
+        // **CAMBIAR TEMA (Claro/Oscuro) - CON EMOJIS**
+        function cambiarTema() {
+            let body = document.body;
+            let boton = document.getElementById("toggleTema");
+
+            body.classList.toggle('tema-claro');
+
+            if (body.classList.contains('tema-claro')) {
+                localStorage.setItem('tema', 'claro');
+                // Tema CLARO: Muestra la luna (opción para cambiar a oscuro)
+                boton.textContent = "🌙";
+            } else {
+                localStorage.setItem('tema', 'oscuro');
+                // Tema OSCURO: Muestra el sol (opción para cambiar a claro)
+                boton.textContent = "☀️";
+            }
+        }
+
+        // **CARGAR TEMA guardado - CON EMOJIS**
+        function cargarTema() {
+            let temaGuardado = localStorage.getItem('tema');
+            let body = document.body;
+            let boton = document.getElementById("toggleTema");
+
+            if (!boton) return;
+
+            if (temaGuardado === 'claro') {
+                body.classList.add('tema-claro');
+                // Tema CLARO: Muestra la luna (opción para cambiar a oscuro)
+                boton.textContent = "🌙";
+            } else {
+                // Tema OSCURO por defecto: Muestra el sol (opción para cambiar a claro)
+                body.classList.remove('tema-claro');
+                boton.textContent = "☀️";
+            }
+        }
+
+
+        // **Añadir Artículo**
+        function agregarArticulo() {
+            let nombre = document.getElementById("nuevoArticulo").value.trim();
+            let tipo = document.getElementById("nuevoTipo").value.trim();
+            let cantidad = parseFloat(document.getElementById("nuevaCantidad").value.replace(',', '.'));
+
+            if (!nombre || !tipo || isNaN(cantidad)) {
+                alert("Rellena todos los campos correctamente.");
+                return;
+            }
+
+            agregarFila(nombre, tipo, cantidad);
+            document.getElementById("nuevoArticulo").value = "";
+            document.getElementById("nuevoTipo").value = "";
+            document.getElementById("nuevaCantidad").value = "";
+            guardarLocalStorage();
+        }
+
+        // **Agregar Fila**
+        function agregarFila(nombre, tipo, cantidad) {
+            let tabla = document.getElementById("tabla");
+            let fila = tabla.insertRow(-1);
+
+            let celda1 = fila.insertCell(0); celda1.textContent = nombre;
+            let celda2 = fila.insertCell(1); celda2.textContent = tipo;
+
+            let celda3 = fila.insertCell(2);
+            let celdaId = "c" + Date.now() + Math.floor(Math.random() * 1000);
+            celda3.id = celdaId;
+            celda3.textContent = cantidad.toString().replace('.', ',');
+
+            let celda4 = fila.insertCell(3);
+            celda4.innerHTML = `
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; margin-bottom: 10px;">
+                    <button class="restar" onclick="ponerCero('${celdaId}')">Poner a 0</button>
+                    
+                    <button class="eliminar" onclick="eliminarFila(this)">Eliminar</button>
+                </div>
+
+                <div style="display: flex; justify-content: center; align-items: center; gap: 5px;">
+                    <input type="number" id="inputSet${celdaId}" placeholder="Cantidad" min="0" step="0.01" class="accion-input" style="width: 80px;">
+                    <button class="sumar" onclick="sumarCantidad('${celdaId}')">Añadir</button>
+                    <button class="restar" onclick="restarCantidad('${celdaId}')">Quitar</button>
+                </div>
+            `;
+        }
+
+        // **Ordenar Tabla**
+        function ordenarTabla(columna, numerico = false) {
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+            filas.sort((a, b) => {
+                let A = a.cells[columna].textContent;
+                let B = b.cells[columna].textContent;
+                if (numerico) {
+                    A = parseFloat(A.replace(',', '.')) || 0;
+                    B = parseFloat(B.replace(',', '.')) || 0;
+                    return ordenAsc ? A - B : B - A;
+                } else {
+                    return ordenAsc ? A.localeCompare(B) : B.localeCompare(A);
+                }
+            });
+            filas.forEach(f => tabla.appendChild(f));
+            ordenAsc = !ordenAsc;
+        }
+
+        // **Filtrar Tabla**
+        function filtrarTabla() {
+            let input = document.getElementById("inputBuscar").value.toLowerCase();
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+            filas.forEach(fila => {
+                let articulo = fila.cells[0].textContent.toLowerCase();
+                let tipo = fila.cells[1].textContent.toLowerCase();
+                fila.style.display = (articulo.includes(input) || tipo.includes(input)) ? "" : "none";
+            });
+        }
+
+        // **Guardar en LocalStorage**
+        function guardarLocalStorage() {
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+            let inventario = filas.map(f => {
+                return {
+                    articulo: f.cells[0].textContent,
+                    tipo: f.cells[1].textContent,
+                    cantidad: f.cells[2].textContent
+                };
+            });
+            localStorage.setItem("inventarioBebidas", JSON.stringify(inventario));
+        }
+
+        // **Cargar Inventario**
+        function cargarLocalStorage() {
+            let inventario = JSON.parse(localStorage.getItem("inventarioBebidas"));
+            if (inventario && inventario.length > 0) {
+                inventario.forEach(item => agregarFila(item.articulo, item.tipo, parseFloat(item.cantidad.replace(',', '.'))));
+            } else {
+                // Artículos iniciales
+                agregarFila("Johnnie Walker Red Label", "Whisky", 10);
+                agregarFila("Jameson Irish Whiskey", "Whisky", 8);
+                agregarFila("Jack Daniel's Old No. 7", "Whisky", 12);
+                agregarFila("Absolut Vodka", "Vodka", 9);
+                agregarFila("Smirnoff Vodka", "Vodka", 11);
+                agregarFila("Grey Goose Vodka", "Vodka", 4);
+                agregarFila("Larios 12", "Ginebra", 7);
+                agregarFila("Tanqueray London Dry", "Ginebra", 5);
+                agregarFila("Beefeater", "Ginebra", 6);
+                agregarFila("Heineken", "Cerveza", 24);
+                guardarLocalStorage();
+            }
+        }
+
+        // CARGAR AL INICIAR
+        cargarLocalStorage();
+        cargarTema();
+    </script>
+</body>
+
+</html>

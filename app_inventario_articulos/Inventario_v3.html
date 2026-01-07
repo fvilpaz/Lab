@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>N_Inventory — Filtrado por departamento y edición por artículo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 12px;
+            background: #111;
+            color: #fff;
+            transition: background .2s, color .2s
+        }
+
+        body.light {
+            background: #f5f5f5;
+            color: #222
+        }
+
+        h1 {
+            font-size: 22px;
+            margin: 0 0 12px 0
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            align-items: center
+        }
+
+        input,
+        select {
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .2);
+            background: #222;
+            color: #fff
+        }
+
+        body.light input,
+        body.light select {
+            background: #fff;
+            color: #222;
+            border: 1px solid #ccc
+        }
+
+        button {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 4px
+        }
+
+        button.add {
+            background: #4caf50;
+            color: #fff
+        }
+
+        button.sub {
+            background: #f44336;
+            color: #fff
+        }
+
+        button.del {
+            background: #b00;
+            color: #fff
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, .2);
+            text-align: left;
+            font-size: 14px
+        }
+
+        body.light th,
+        body.light td {
+            border-bottom: 1px solid #ccc
+        }
+
+        thead th {
+            cursor: pointer;
+            color: #aaa
+        }
+
+        small {
+            color: #aaa;
+            font-size: 12px
+        }
+
+        .theme-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            padding: 6px
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+    <h1>📦 N_Inventory</h1>
+
+    <div class="controls">
+        <label>Departamento:</label>
+        <select id="filtroDept" onchange="render()">
+            <option>Room Service</option>
+            <option>Restaurante</option>
+            <option>Bares</option>
+        </select>
+        <label>Buscar:</label>
+        <input type="text" id="search" placeholder="Artículo o tipo" oninput="render()" />
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th onclick="ordenar('articulo')">Artículo ▲▼</th>
+                <th onclick="ordenar('tipo')">Tipo ▲▼</th>
+                <th onclick="ordenar('cantidad',true)">Cantidad ▲▼</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+    </table>
+
+    <h3>Añadir nuevo artículo</h3>
+    <div class="controls">
+        <input type="text" id="nuevoArticulo" placeholder="Nombre del artículo" />
+        <input type="text" id="nuevoTipo" placeholder="Tipo/familia" />
+        <input type="number" id="nuevaCantidad" placeholder="Cantidad inicial" step="0.01" />
+        <select id="nuevoDept">
+            <option>Room Service</option>
+            <option>Restaurante</option>
+            <option>Bares</option>
+        </select>
+        <button onclick="agregarArticulo()">➕ Añadir</button>
+    </div>
+
+    <h3>Acción global</h3>
+    <button style="margin-top:6px;width:100%;background:#666;color:#fff" onclick="reiniciarInventario()">⚠️ Reinicio
+        total (poner todo a 0)</button>
+
+    <script>
+        const lsKey = 'NInventory_v3';
+
+        function genId() { return 'i' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36); }
+        function parseNum(str) { if (!str) return NaN; return parseFloat(str.toString().trim().replace(',', '.')); }
+
+        let inventario = JSON.parse(localStorage.getItem(lsKey)) || [
+            // Room Service
+            { id: genId(), articulo: "Agua 33cl", tipo: "Bebida", cantidad: 12, dept: "Room Service" },
+            { id: genId(), articulo: "Refresco Cola", tipo: "Bebida", cantidad: 20, dept: "Room Service" },
+            { id: genId(), articulo: "Cerveza 33cl", tipo: "Bebida", cantidad: 15, dept: "Room Service" },
+            { id: genId(), articulo: "Tónica", tipo: "Bebida", cantidad: 10, dept: "Room Service" },
+            { id: genId(), articulo: "Café soluble", tipo: "Alimento", cantidad: 8, dept: "Room Service" },
+            // Restaurante
+            { id: genId(), articulo: "Pan", tipo: "Alimento", cantidad: 30, dept: "Restaurante" },
+            { id: genId(), articulo: "Aceite", tipo: "Alimento", cantidad: 10, dept: "Restaurante" },
+            { id: genId(), articulo: "Servilletas", tipo: "Material", cantidad: 200, dept: "Restaurante" },
+            { id: genId(), articulo: "Manteles", tipo: "Material", cantidad: 40, dept: "Restaurante" },
+            { id: genId(), articulo: "Sal", tipo: "Alimento", cantidad: 25, dept: "Restaurante" },
+            // Bares
+            { id: genId(), articulo: "Ginebra", tipo: "Bebida alcohólica", cantidad: 5, dept: "Bares" },
+            { id: genId(), articulo: "Vodka", tipo: "Bebida alcohólica", cantidad: 6, dept: "Bares" },
+            { id: genId(), articulo: "Ron", tipo: "Bebida alcohólica", cantidad: 7, dept: "Bares" },
+            { id: genId(), articulo: "Red Bull", tipo: "Bebida energética", cantidad: 12, dept: "Bares" },
+            { id: genId(), articulo: "Hielo", tipo: "Material", cantidad: 50, dept: "Bares" }
+        ];
+
+        let sort = { campo: null, asc: true };
+
+        function guardar() { localStorage.setItem(lsKey, JSON.stringify(inventario)); }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            const btn = document.querySelector('.theme-btn');
+            btn.textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+        }
+
+        function agregarArticulo() {
+            const nombre = document.getElementById('nuevoArticulo').value.trim();
+            const tipo = document.getElementById('nuevoTipo').value.trim();
+            const cantidad = parseNum(document.getElementById('nuevaCantidad').value);
+            const dept = document.getElementById('nuevoDept').value;
+            if (!nombre || !tipo || isNaN(cantidad)) { alert('Rellena nombre, tipo y cantidad válida'); return; }
+            inventario.push({ id: genId(), articulo: nombre, tipo: tipo, cantidad: Math.round((cantidad + Number.EPSILON) * 100) / 100, dept: dept });
+            guardar();
+            document.getElementById('nuevoArticulo').value = ''; document.getElementById('nuevoTipo').value = ''; document.getElementById('nuevaCantidad').value = '';
+            render();
+        }
+
+        function reiniciarInventario() {
+            if (!confirm('¿Poner TODAS las cantidades a 0?')) return;
+            inventario.forEach(x => x.cantidad = 0);
+            guardar();
+            render();
+        }
+
+        function modificarCantidad(id, delta) {
+            const idx = inventario.findIndex(x => x.id === id); if (idx === -1) return;
+            let val = inventario[idx].cantidad + delta;
+            if (val < 0) val = 0;
+            inventario[idx].cantidad = Math.round((val + Number.EPSILON) * 100) / 100;
+            guardar(); render();
+        }
+
+        function eliminarItem(id) { inventario = inventario.filter(x => x.id !== id); guardar(); render(); }
+
+        function ordenar(campo, numerico = false) { sort.campo === campo ? sort.asc = !sort.asc : sort = { campo: campo, asc: true }; render(); }
+
+        function render() {
+            const tbody = document.getElementById('tabla'); tbody.innerHTML = '';
+            const dept = document.getElementById('filtroDept').value;
+            const q = document.getElementById('search').value.trim().toLowerCase();
+            let lista = inventario.filter(x => (x.dept === dept) && (x.articulo.toLowerCase().includes(q) || x.tipo.toLowerCase().includes(q)));
+            if (sort.campo) {
+                lista.sort((a, b) => {
+                    let A = a[sort.campo], B = b[sort.campo];
+                    if (sort.campo === 'cantidad') { return sort.asc ? A - B : B - A; }
+                    A = A.toString().toLowerCase(); B = B.toString().toLowerCase();
+                    return sort.asc ? A.localeCompare(B) : B.localeCompare(A);
+                });
+            }
+            lista.forEach(item => {
+                const tr = document.createElement('tr');
+                const tdArt = document.createElement('td'); tdArt.textContent = item.articulo;
+                const tdTipo = document.createElement('td'); tdTipo.textContent = item.tipo;
+                const tdCant = document.createElement('td'); tdCant.textContent = item.cantidad.toString().replace('.', ',');
+
+                const tdAcc = document.createElement('td');
+
+                const input = document.createElement('input'); input.type = 'number'; input.step = '0.01'; input.placeholder = 'Cantidad'; input.style.width = '80px';
+
+                const btnAdd = document.createElement('button'); btnAdd.textContent = 'Añadir'; btnAdd.className = 'add';
+                btnAdd.onclick = () => { const val = parseNum(input.value); if (isNaN(val) || val <= 0) { alert('Cantidad positiva válida'); return; } modificarCantidad(item.id, val); input.value = ''; };
+
+                const btnSub = document.createElement('button'); btnSub.textContent = 'Quitar'; btnSub.className = 'sub';
+                btnSub.onclick = () => { const val = parseNum(input.value); if (isNaN(val) || val <= 0) { alert('Cantidad positiva válida'); return; } modificarCantidad(item.id, -val); input.value = ''; };
+
+                const btnDel = document.createElement('button'); btnDel.textContent = 'Eliminar'; btnDel.className = 'del';
+                btnDel.onclick = () => { if (!confirm(`Eliminar ${item.articulo}?`)) return; eliminarItem(item.id); };
+
+                tdAcc.appendChild(input); tdAcc.appendChild(btnAdd); tdAcc.appendChild(btnSub); tdAcc.appendChild(btnDel);
+
+                tr.appendChild(tdArt); tr.appendChild(tdTipo); tr.appendChild(tdCant); tr.appendChild(tdAcc);
+                tbody.appendChild(tr);
+            });
+        }
+
+        render();
+    </script>
+</body>
+
+</html>

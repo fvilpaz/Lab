@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario de Bebidas - Estilo Arch Linux</title>
+    <style>
+        /* BODY Y FUENTES */
+        body {
+            font-family: "Fira Sans", Arial, sans-serif;
+            margin: 20px;
+            background-color: #1e1e2f;
+            /* gris oscuro azulado */
+            color: #e0e0e0;
+        }
+
+        /* LOGO: Nuevos estilos para ponerlo a la izquierda */
+        #logo {
+            text-align: left;
+            margin: 10px 0 20px 10px;
+            /* Margen superior/inferior y izquierda */
+        }
+
+        #logo img {
+            max-width: 150px;
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffffff;
+            margin-top: 0;
+            /* Aseguramos que el H1 no empuje el logo hacia abajo */
+        }
+
+        /* FORMULARIO Y BUSCADOR */
+        #formulario,
+        #buscador {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #formulario input,
+        #buscador input {
+            padding: 6px 12px;
+            margin: 0 5px 10px 0;
+            border-radius: 4px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        /* TABLA */
+        table {
+            width: 90%;
+            margin: auto;
+            border-collapse: collapse;
+            background: #2a2a3d;
+            color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            cursor: pointer;
+            background: #33334d;
+            user-select: none;
+            transition: background 0.3s;
+        }
+
+        th:hover {
+            background: #3d3d5a;
+        }
+
+        /* BOTONES */
+        button {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        button svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        button.sumar {
+            background: #268bd2;
+            /* azul Arch */
+        }
+
+        button.restar {
+            background: #dc322f;
+            /* rojo */
+        }
+
+        button.eliminar {
+            background: #b58900;
+            /* amarillo dorado */
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        /* INPUT DE BUSCADOR */
+        #inputBuscar {
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="logo">
+        <img src="logo.png" alt="Logo">
+    </div>
+
+    <h1>Inventario de Bebidas</h1>
+
+    <div id="buscador">
+        <input type="text" id="inputBuscar" placeholder="Buscar artículo o tipo" onkeyup="filtrarTabla()">
+    </div>
+
+    <div id="formulario">
+        <input type="text" id="nuevoArticulo" placeholder="Artículo">
+        <input type="text" id="nuevoTipo" placeholder="Tipo">
+        <input type="number" id="nuevaCantidad" placeholder="Cantidad" min="0" step="0.01">
+        <button onclick="agregarArticulo()">Añadir</button>
+    </div>
+
+    <table id="tabla">
+        <tr>
+            <th onclick="ordenarTabla(0)">Artículo ▲▼</th>
+            <th onclick="ordenarTabla(1)">Tipo ▲▼</th>
+            <th onclick="ordenarTabla(2, true)">Cantidad ▲▼</th>
+            <th>Acciones</th>
+        </tr>
+    </table>
+
+    <script>
+        // ORDEN
+        let ordenAsc = true;
+
+        // AJUSTAR VALORES
+        function ajustar(id, delta) {
+            let celda = document.getElementById(id);
+            if (!celda) return; // Añadido para seguridad, aunque ya no debería fallar
+
+            let valor = parseFloat(celda.textContent.replace(',', '.')) || 0;
+            valor += delta;
+            if (valor < 0) valor = 0;
+            valor = Math.round((valor + Number.EPSILON) * 100) / 100; // 2 decimales
+            celda.textContent = valor.toString().replace('.', ',');
+            guardarLocalStorage();
+        }
+
+        // ELIMINAR FILA
+        function eliminarFila(boton) {
+            let fila = boton.parentNode.parentNode;
+            fila.parentNode.removeChild(fila);
+            guardarLocalStorage();
+        }
+
+        // AÑADIR ARTÍCULO
+        function agregarArticulo() {
+            let nombre = document.getElementById("nuevoArticulo").value.trim();
+            let tipo = document.getElementById("nuevoTipo").value.trim();
+            let cantidad = parseFloat(document.getElementById("nuevaCantidad").value.replace(',', '.'));
+
+            if (!nombre || !tipo || isNaN(cantidad)) {
+                alert("Rellena todos los campos correctamente.");
+                return;
+            }
+
+            agregarFila(nombre, tipo, cantidad);
+            document.getElementById("nuevoArticulo").value = "";
+            document.getElementById("nuevoTipo").value = "";
+            document.getElementById("nuevaCantidad").value = "";
+            guardarLocalStorage();
+        }
+
+        function agregarFila(nombre, tipo, cantidad) {
+            let tabla = document.getElementById("tabla");
+            let fila = tabla.insertRow(-1);
+
+            let celda1 = fila.insertCell(0); celda1.textContent = nombre;
+            let celda2 = fila.insertCell(1); celda2.textContent = tipo;
+
+            let celda3 = fila.insertCell(2);
+            // ¡CORRECCIÓN CLAVE! Generar un ID ÚNICO y robusto para evitar colisiones al cargar desde localStorage.
+            let celdaId = "c" + Date.now() + Math.floor(Math.random() * 1000);
+            celda3.id = celdaId;
+            celda3.textContent = cantidad.toString().replace('.', ',');
+
+            let celda4 = fila.insertCell(3);
+            // Usamos el ID único en el onclick de cada botón
+            celda4.innerHTML = `
+                <button class="sumar" onclick="ajustar('${celdaId}',1)">+1</button>
+                <button class="restar" onclick="ajustar('${celdaId}',-1)">-1</button>
+                <button class="sumar" onclick="ajustar('${celdaId}',0.1)">+0,1</button>
+                <button class="restar" onclick="ajustar('${celdaId}',-0.1)">-0,1</button>
+                <button class="eliminar" onclick="eliminarFila(this)">Eliminar</button>
+            `;
+        }
+
+        // ORDENAR TABLA
+        function ordenarTabla(columna, numerico = false) {
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+            filas.sort((a, b) => {
+                let A = a.cells[columna].textContent;
+                let B = b.cells[columna].textContent;
+                if (numerico) {
+                    A = parseFloat(A.replace(',', '.')) || 0;
+                    B = parseFloat(B.replace(',', '.')) || 0;
+                    return ordenAsc ? A - B : B - A;
+                } else {
+                    return ordenAsc ? A.localeCompare(B) : B.localeCompare(A);
+                }
+            });
+            filas.forEach(f => tabla.appendChild(f));
+            ordenAsc = !ordenAsc;
+        }
+
+        // FILTRAR TABLA
+        function filtrarTabla() {
+            let input = document.getElementById("inputBuscar").value.toLowerCase();
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+            filas.forEach(fila => {
+                let articulo = fila.cells[0].textContent.toLowerCase();
+                let tipo = fila.cells[1].textContent.toLowerCase();
+                fila.style.display = (articulo.includes(input) || tipo.includes(input)) ? "" : "none";
+            });
+        }
+
+        // GUARDAR EN LOCALSTORAGE
+        function guardarLocalStorage() {
+            let tabla = document.getElementById("tabla");
+            let filas = Array.from(tabla.rows).slice(1);
+            let inventario = filas.map(f => {
+                return { articulo: f.cells[0].textContent, tipo: f.cells[1].textContent, cantidad: f.cells[2].textContent };
+            });
+            localStorage.setItem("inventarioBebidas", JSON.stringify(inventario));
+        }
+
+        // CARGAR INVENTARIO
+        function cargarLocalStorage() {
+            let inventario = JSON.parse(localStorage.getItem("inventarioBebidas"));
+            if (inventario && inventario.length > 0) {
+                // Importante: Al cargar, el ID debe ser generado de nuevo con la misma lógica robusta.
+                inventario.forEach(item => agregarFila(item.articulo, item.tipo, parseFloat(item.cantidad.replace(',', '.'))));
+            } else {
+                // Artículos iniciales
+                agregarFila("Johnnie Walker Red Label", "Whisky", 10);
+                agregarFila("Jameson Irish Whiskey", "Whisky", 8);
+                agregarFila("Jack Daniel's Old No. 7", "Whisky", 12);
+                agregarFila("Absolut Vodka", "Vodka", 9);
+                agregarFila("Smirnoff Vodka", "Vodka", 11);
+                agregarFila("Grey Goose Vodka", "Vodka", 4);
+                agregarFila("Larios 12", "Ginebra", 7);
+                agregarFila("Tanqueray London Dry", "Ginebra", 5);
+                agregarFila("Beefeater", "Ginebra", 6);
+                agregarFila("Heineken", "Cerveza", 24);
+                guardarLocalStorage();
+            }
+        }
+
+        // CARGAR AL INICIAR
+        cargarLocalStorage();
+    </script>
+</body>
+
+</html>
