@@ -6,7 +6,7 @@
 #    By: fvilas-p <fvilas-p@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/23 22:05:52 by fvilas-p          #+#    #+#              #
-#    Updated: 2025/12/30 21:48:12 by fvilas-p         ###   ########.fr        #
+#    Updated: 2026/01/13 21:54:09 by fvilas-p         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Werror
 
 SRCS = main.c swap_ops.c push_ops.c rotate_ops.c rev_rotate_ops.c \
-       ops_utils.c list_utils.c sort_utils.c split_utils.c
+       ops_utils.c list_utils.c sort_utils.c check_utils.c split_utils.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(NAME)

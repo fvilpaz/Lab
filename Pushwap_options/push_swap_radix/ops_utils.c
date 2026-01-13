@@ -86,10 +86,16 @@ int	ft_atoi(const char *str)
 	while (*str)
 	{
 		if (*str < '0' || *str > '9')
-			write(2, "Error\n", 6), exit(1);
+		{
+			write(2, "Error\n", 6);
+			exit(1);
+		}
 		res = res * 10 + (*str - '0');
 		if (res * sign > 2147483647 || res * sign < -2147483648)
-			write(2, "Error\n", 6), exit(1);
+		{
+			write(2, "Error\n", 6);
+			exit(1);
+		}
 		str++;
 	}
 	return ((int)(res * sign));

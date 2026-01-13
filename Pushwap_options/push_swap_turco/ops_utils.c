@@ -6,7 +6,7 @@
 /*   By: fvilas-p <fvilas-p@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 16:45:46 by fvilas-p          #+#    #+#             */
-/*   Updated: 2025/12/02 19:56:32 by fvilas-p         ###   ########.fr       */
+/*   Updated: 2026/01/13 20:35:42 by fvilas-p         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,10 +86,12 @@ int	ft_atoi(const char *str)
 	while (*str)
 	{
 		if (*str < '0' || *str > '9')
-			write(2, "Error\n", 6), exit(1);
+			write(2, "Error\n", 6); 
+			exit(1);
 		res = res * 10 + (*str - '0');
 		if (res * sign > 2147483647 || res * sign < -2147483648)
-			write(2, "Error\n", 6), exit(1);
+			write(2, "Error\n", 6); 
+			exit(1);
 		str++;
 	}
 	return ((int)(res * sign));

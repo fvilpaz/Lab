@@ -1,0 +1,40 @@
+============================================================
+       PRUEBAS DE ROBUSTEZ (PUSH_SWAP SUBJECT 42)
+============================================================
+
+1. CASOS DE IDENTIDAD (No deben imprimir NADA)
+------------------------------------------------------------
+./push_swap 42                      -> Resultado: (vacío)
+./push_swap 0 1 2 3                 -> Resultado: (vacío)
+./push_swap "0 1 2 3"               -> Resultado: (vacío)
+
+2. CASOS DE ERROR (Debe imprimir "Error" por stderr)
+------------------------------------------------------------
+./push_swap 2 1 2                   -> Motivo: Duplicados
+./push_swap a b c                   -> Motivo: No son números
+./push_swap 2147483648              -> Motivo: > INT_MAX
+./push_swap -2147483649             -> Motivo: < INT_MIN
+./push_swap ""                      -> Motivo: String vacío
+./push_swap "   "                   -> Motivo: Solo espacios
+./push_swap 3 2 1 6 7 "8 7 7 8"     -> Motivo: Duplicado dentro de string
+
+3. LÍMITES DE MOVIMIENTOS (Eficiencia)
+------------------------------------------------------------
+./push_swap 2 1 0 | wc -l           -> Máximo: 3 (Tu Radix hace 2: OK!)
+./push_swap 1 5 2 4 3 | wc -l       -> Máximo: 12 (Tu Radix hace 6: OK!)
+
+4. PRUEBAS DE VOLUMEN (Rendimiento Radix)
+------------------------------------------------------------
+100 Números:
+ARG=$(shuf -i 0-500 -n 100 | tr '\n' ' '); ./push_swap $ARG | wc -l
+-> Tu resultado: ~1084 (Aprobado)
+
+500 Números:
+ARG=$(shuf -i 0-2000 -n 500 | tr '\n' ' '); ./push_swap $ARG | wc -l
+-> Tu resultado: ~6784 (Aprobado sólido)
+
+5. PRUEBA DE MEMORIA (Valgrind)
+------------------------------------------------------------
+valgrind --leak-check=full ./push_swap 3 2 1 6 7
+-> Debe decir: "All heap blocks were freed -- no leaks are possible"
+============================================================

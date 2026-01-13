@@ -6,7 +6,7 @@
 /*   By: fvilas-p <fvilas-p@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 16:11:43 by fvilas-p          #+#    #+#             */
-/*   Updated: 2025/12/30 21:32:36 by fvilas-p         ###   ########.fr       */
+/*   Updated: 2026/01/13 22:29:31 by fvilas-p         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ void	reverse(t_node **stack);
 
 /* sort_utils*/
 void	assign_args(int argc, char **argv);
-void	sort_two(t_node **stack);
 void	sort_three(t_node **stack);
 void	sort_small(t_node **a, t_node **b);
 void	radix(t_node **a);
